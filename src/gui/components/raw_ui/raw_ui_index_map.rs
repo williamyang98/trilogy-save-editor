@@ -12,6 +12,7 @@ use crate::{
     },
     save_data::{
         mass_effect_1_le::legacy::{Level, Map},
+        mass_effect_3::war_asset::WarAsset,
         RcRef,
     },
 };
@@ -22,6 +23,7 @@ where
     T: RawUi + Default,
 {
     I32(RcRef<IndexMap<i32, T>>),
+    WarAsset(RcRef<IndexMap<WarAsset, T>>),
     String(RcRef<IndexMap<String, T>>),
 }
 
@@ -32,6 +34,7 @@ where
     fn eq(&self, other: &IndexMapKeyType<T>) -> bool {
         match (self, other) {
             (IndexMapKeyType::I32(integer), IndexMapKeyType::I32(other)) => integer == other,
+            (IndexMapKeyType::WarAsset(integer), IndexMapKeyType::WarAsset(other)) => integer == other,
             (IndexMapKeyType::String(string), IndexMapKeyType::String(other)) => string == other,
             _ => false,
         }
@@ -82,6 +85,7 @@ where
                     // Prevent last item to reopen
                     self.new_item_idx = match ctx.props().index_map {
                         IndexMapKeyType::I32(ref index_map) => index_map.borrow().len(),
+                        IndexMapKeyType::WarAsset(ref index_map) => index_map.borrow().len(),
                         IndexMapKeyType::String(ref index_map) => index_map.borrow().len(),
                     };
                 }
@@ -93,6 +97,11 @@ where
                         // Open added item
                         self.new_item_idx = index_map.borrow().len();
                         index_map.borrow_mut().entry(-1).or_default();
+                    }
+                    IndexMapKeyType::WarAsset(ref index_map) => {
+                        // Open added item
+                        self.new_item_idx = index_map.borrow().len();
+                        index_map.borrow_mut().entry((-1).into()).or_default();
                     }
                     IndexMapKeyType::String(ref index_map) => {
                         // Open added item
@@ -107,6 +116,9 @@ where
                     IndexMapKeyType::I32(ref index_map) => {
                         index_map.borrow_mut().shift_remove_index(idx);
                     }
+                    IndexMapKeyType::WarAsset(ref index_map) => {
+                        index_map.borrow_mut().shift_remove_index(idx);
+                    }
                     IndexMapKeyType::String(ref index_map) => {
                         index_map.borrow_mut().shift_remove_index(idx);
                     }
@@ -118,6 +130,15 @@ where
                     CallbackType::Int(new_key) => {
                         if let Some((key, _)) = index_map.borrow_mut().get_index_mut(idx) {
                             *key = new_key;
+                        }
+                        true
+                    }
+                    _ => false,
+                },
+                IndexMapKeyType::WarAsset(ref index_map) => match new_key {
+                    CallbackType::Int(new_key) => {
+                        if let Some((key, _)) = index_map.borrow_mut().get_index_mut(idx) {
+                            *key = new_key.into();
                         }
                         true
                     }
@@ -191,6 +212,19 @@ where
                                 />
                             };
                             view(idx, key.to_string(), input_k, value)
+                        })
+                        .collect::<Vec<_>>(),
+                    IndexMapKeyType::WarAsset(ref index_map) => index_map
+                        .borrow()
+                        .iter()
+                        .enumerate()
+                        .map(|(idx, (key, value))| {
+                            let input_k = html! {
+                                <InputNumber label={key.as_str()} value={NumberType::Int((*key).into())}
+                                    onchange={ctx.link().callback(move |callback| Msg::EditKey(idx, callback))}
+                                />
+                            };
+                            view(idx, format!("{0} ({1})", key.as_str(), key.0), input_k, value)
                         })
                         .collect::<Vec<_>>(),
                     IndexMapKeyType::String(ref index_map) => index_map

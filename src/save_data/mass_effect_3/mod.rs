@@ -2,6 +2,7 @@ mod galaxy_map;
 pub mod player;
 pub mod plot;
 pub mod plot_db;
+pub mod war_asset;
 mod squad;
 
 use self::{galaxy_map::*, player::*, plot::*, squad::*};

@@ -1,11 +1,11 @@
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
-
 use crate::save_data::{
     shared::{
         appearance::Appearance,
         player::{Notoriety, Origin, WeaponLoadout},
     },
+    mass_effect_3::war_asset::WarAsset,
     Guid,
 };
 
@@ -30,7 +30,7 @@ pub struct Player {
     pub appearance: Appearance,
     emissive_id: i32,
     pub powers: Vec<Power>,
-    war_assets: IndexMap<i32, i32>,
+    war_assets: IndexMap<WarAsset, i32>,
     weapons: Vec<Weapon>,
     weapons_mods: Vec<WeaponMod>,
     weapons_loadout: WeaponLoadout,
